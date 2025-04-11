@@ -5,3 +5,57 @@ services:
     build: .
     ports:
       - "8000:8000"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MONGODB_URL=mongodb://mongo:27017/
+      - MONGODB_DB=bittensor_api
+      - API_TOKEN=${API_TOKEN}
+      - DATURA_API_KEY=${DATURA_API_KEY}
+      - CHUTES_API_KEY=${CHUTES_API_KEY}
+      - WALLET_MNEMONIC=${WALLET_MNEMONIC}
+    volumes:
+      - ./app:/app/app
+    depends_on:
+      - redis
+      - mongo
+    restart: unless-stopped
+
+  worker:
+    build: .
+    command: celery -A app.worker worker --loglevel=info
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MONGODB_URL=mongodb://mongo:27017/
+      - MONGODB_DB=bittensor_api
+      - API_TOKEN=${API_TOKEN}
+      - DATURA_API_KEY=${DATURA_API_KEY}
+      - CHUTES_API_KEY=${CHUTES_API_KEY}
+      - WALLET_MNEMONIC=${WALLET_MNEMONIC}
+    volumes:
+      - ./app:/app/app
+    depends_on:
+      - redis
+      - mongo
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.0-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:5.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  mongo_data:

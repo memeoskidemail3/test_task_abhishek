@@ -6,8 +6,9 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Import app modules
-
+# # Import app modules
+from app.api.routes import router as api_router
+from app.db.models import init_db, close_db
 
 # Create FastAPI app
 app = FastAPI(
@@ -25,7 +26,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Add API routes
+app.include_router(api_router)
 
+@app.on_event("startup")
+async def startup_db_client():
+    await init_db()
+
+@app.on_event("shutdown")
+async def shutdown_db_client():
+    await close_db()
 
 @app.get("/", tags=["Root"])
 async def root():
