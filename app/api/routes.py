@@ -69,9 +69,8 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         logger.error(f"Error in login: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Wrong username or password",
         )
-
 
 @router.get("/tao_dividends")
 async def get_tao_dividends(
@@ -180,7 +179,7 @@ async def get_operations(
 
 @router.get("/sentiment")
 async def get_sentiment(
-    netuid: int = Query(..., description="Subnet ID"),
+    netuid: int = Query(..., description="netuid of the subnet"),
     api_key: str = Depends(get_api_key)
 ):
     """
@@ -191,10 +190,9 @@ async def get_sentiment(
         engine = await get_engine()
         # Retrieve sentiment records from database
         sentiment_records = await engine.find(SentimentAnalysis, SentimentAnalysis.netuid == netuid)
+        logger.info(f"Sentiment records for netuid {netuid}: {sentiment_records}")
         
-        return {
-            "sentiment_history": [record.dict() for record in sentiment_records]
-        }
+        return sentiment_records
         
     except Exception as e:
         logger.error(f"Error in sentiment endpoint: {str(e)}")

@@ -1,67 +1,67 @@
 import os
 import httpx
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from loguru import logger
+from app.utils.config import settings
 
 # Datura.ai API configuration
-DATURA_API_KEY = os.getenv("DATURA_API_KEY")
-DATURA_API_URL = "https://api.datura.ai/api/v1"
+DATURA_API_KEY = settings.DATURA_API_KEY
+DATURA_API_URL = settings.DATURA_API_URL
 
-async def search_twitter(netuid: int, max_results: int = 10) -> List[Dict[str, Any]]:
+
+async def search_twitter(netuid: int, count: int = 10) -> List[Dict[str, Any]]:
     """
-    Search recent tweets about the specified subnet.
-    
+    Search recent tweets for the specified Bittensor subnet using Datura.ai.
+
     Args:
-        netuid: Subnet ID to search for
-        max_results: Maximum number of tweets to return
-        
+        netuid: Subnet ID to search
+        count: Max number of tweets to return
+
     Returns:
-        List of tweets with content and metadata
+        List of tweet dicts with text and metadata
     """
     if not DATURA_API_KEY:
         logger.error("Datura API key not found")
         raise ValueError("Datura API key not configured")
-    
+
     search_term = f"Bittensor netuid {netuid}"
-    
-    # Build request
-    url = f"{DATURA_API_URL}/twitter/search"
+    logger.info(f"Searching tweets for: {search_term}")
+
+    url = f"{DATURA_API_URL}/twitter"
     headers = {
-        "Authorization": f"Bearer {DATURA_API_KEY}",
+        "Authorization": DATURA_API_KEY,
         "Content-Type": "application/json"
     }
-    
-    payload = {
+
+    params = {
         "query": search_term,
-        "max_results": max_results,
-        "tweet_fields": ["created_at", "public_metrics", "text"]
+        "blue_verified": False,
+        "end_date": "2025-02-17",
+        "is_image": False,
+        "is_quote": False,
+        "is_video": False,
+        "lang": "en",
+        "min_likes": 0,
+        "min_replies": 0,
+        "min_retweets": 0,
+        "sort": "Top",
+        "start_date": "2025-02-16",
+        "count": count
     }
-    
+
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(url, headers=headers, json=payload, timeout=30.0)
+            response = await client.get(url, headers=headers, params=params, timeout=30.0)
             response.raise_for_status()
-            
             data = response.json()
-            
-            # Check if data contains tweets
-            if "data" not in data or not data["data"]:
-                logger.warning(f"No tweets found for search term: {search_term}")
+
+            if not data:
+                logger.warning(f"No tweets found for netuid {netuid}")
                 return []
-            
-            # Process tweets
-            tweets = []
-            for tweet in data["data"]:
-                tweets.append({
-                    "id": tweet.get("id"),
-                    "text": tweet.get("text"),
-                    "created_at": tweet.get("created_at"),
-                    "metrics": tweet.get("public_metrics", {})
-                })
-            
-            logger.info(f"Retrieved {len(tweets)} tweets for subnet {netuid}")
-            return tweets
-            
+
+            logger.info(f"Fetched tweets for netuid={netuid}")
+            return data
+
     except httpx.HTTPStatusError as e:
         logger.error(f"Datura API HTTP error: {e.response.status_code} - {e.response.text}")
         raise
@@ -69,5 +69,5 @@ async def search_twitter(netuid: int, max_results: int = 10) -> List[Dict[str, A
         logger.error(f"Datura API request error: {str(e)}")
         raise
     except Exception as e:
-        logger.error(f"Error searching Twitter: {str(e)}")
+        logger.error(f"Unexpected error: {str(e)}")
         raise

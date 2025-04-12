@@ -28,7 +28,7 @@ pwd_context = CryptContext(
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-for-jwt")
+SECRET_KEY = os.getenv("API_SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

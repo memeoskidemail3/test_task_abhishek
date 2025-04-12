@@ -9,7 +9,7 @@ from loguru import logger
 API_KEY_NAME = "Authorization"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-for-jwt")
+SECRET_KEY = os.getenv("API_SECRET_KEY")
 ALGORITHM = "HS256"
 
 

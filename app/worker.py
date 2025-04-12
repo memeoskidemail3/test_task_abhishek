@@ -2,6 +2,7 @@ import os
 from celery import Celery
 from loguru import logger
 
+
 # Configure Celery
 redis_host = os.getenv("REDIS_HOST", "localhost")
 redis_port = os.getenv("REDIS_PORT", 6379)
@@ -28,10 +29,12 @@ celery_app.conf.update(
     }
 )
 
+
 # Optional: Configure Celery logging
 @celery_app.on_after_configure.connect
 def setup_celery_logging(sender, **kwargs):
     logger.info("Celery worker started")
 
+import app.tasks
 if __name__ == "__main__":
     celery_app.start()
