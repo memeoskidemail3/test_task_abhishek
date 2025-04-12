@@ -88,8 +88,8 @@ async def _analyze_sentiment_and_stake(netuid: int, hotkey: str):
             amount=stake_amount,
             sentiment_score=sentiment_score,
             successful=result[0],
-            transaction_hash=result.get("transaction_hash"),
-            error_message=result.get("error")
+            transaction_hash="transaction_hash",
+            error_message=result[1]
         )
         await engine.save(stake_op)
         
