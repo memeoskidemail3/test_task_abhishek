@@ -7,7 +7,7 @@ from app.worker import celery_app
 from app.sentiment.datura import search_twitter
 from app.sentiment.chutes import analyze_sentiment
 from app.db.models import  SentimentAnalysis, StakeOperation, init_db
-from app.blockchain.subtensor import perform_sentiment_based_staking
+from app.blockchain.subtensor import stake_based_on_sentiment
 
 @celery_app.task(name="app.tasks.analyze_sentiment_and_stake")
 def analyze_sentiment_and_stake(netuid: int, hotkey: str):
@@ -71,8 +71,8 @@ async def _analyze_sentiment_and_stake(netuid: int, hotkey: str):
         stake_amount = abs(sentiment_score) * 0.01
         
         # Initialize blockchain client
-        # result = await stake_based_on_sentiment(netuid, hotkey, sentiment_score)
-        result = await perform_sentiment_based_staking(sentiment_score)
+        result = await stake_based_on_sentiment(netuid, hotkey, sentiment_score)
+        # result = await perform_sentiment_based_staking(sentiment_score)
         
         logger.info(f"Stake operation result: {result}")
 
@@ -87,9 +87,9 @@ async def _analyze_sentiment_and_stake(netuid: int, hotkey: str):
             operation_type=op_type,
             amount=stake_amount,
             sentiment_score=sentiment_score,
-            successful=result[0],
+            successful=result,
             transaction_hash="transaction_hash",
-            error_message=result[1]
+            error_message=result
         )
         await engine.save(stake_op)
         
